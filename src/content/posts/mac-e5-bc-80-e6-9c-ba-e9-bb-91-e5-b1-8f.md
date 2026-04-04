@@ -1,0 +1,28 @@
+---
+title: 'Mac开机黑屏'
+description: '刚开不了机，习惯性去扣电池发现没这功能，搜了一个以前不知道的步骤，很有用 重置 PRAM (parameter RAM) 1\. 关闭 Mac。 2\. 在键盘上找到以下按键：Command (⌘)、Option、P 和 R。您需要在步骤 4 中同时按住这些键。 3\. 启动电脑。 4\. 出现灰屏'
+date: '2015-06-29'
+readTime: '3 min read'
+image: '/assets/images/posts/post1.jpg'
+slug: 'mac-e5-bc-80-e6-9c-ba-e9-bb-91-e5-b1-8f'
+---
+
+刚开不了机，习惯性去扣电池发现没这功能，搜了一个以前不知道的步骤，很有用
+
+重置 PRAM (parameter RAM)
+1\. 关闭 Mac。
+2\. 在键盘上找到以下按键：Command (⌘)、Option、P 和 R。您需要在步骤 4 中同时按住这些键。
+3\. 启动电脑。
+4\. 出现灰屏前按住 Command-Option-P-R 键。
+5\. 按下这些键，直到电脑重新启动，您会再次听到启动声。
+6\. 松开这些键。
+
+重置 SMC/重置系统管理控制器
+
+1.  关闭电脑。
+2.  将 MagSafe 电源适配器连接到电源和 Mac（如果尚未连接的话）。
+3.  在内建键盘上，同时按下（左侧）Shift-Control-Option 键和电源按钮。
+4.  同时松开所有键和电源按钮。
+5.  按下电源按钮打开电脑。注：重置 SMC 时，MagSafe 电源适配器上的 LED 指示灯可能会更改状态或暂时关闭。
+
+第一个就很好用，第二个没用过

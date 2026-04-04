@@ -1,0 +1,21 @@
+---
+import { getCollection } from 'astro:content';
+import ArticleCard from './ArticleCard.astro';
+
+const allPosts = (await getCollection('blog', ({ data }) => !data.draft)).sort(
+	(a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf(),
+);
+
+const featuredPosts = allPosts.filter((post) => post.data.featured === true);
+const postsToRender = featuredPosts.length > 0 ? featuredPosts : allPosts.slice(0, 3);
+---
+
+<div class="space-y-10">
+	{
+		postsToRender.map((post) => (
+			<div>
+				<ArticleCard post={post} />
+			</div>
+		))
+	}
+</div>
