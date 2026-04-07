@@ -1,6 +1,7 @@
 ---
 import Navigation from "../../components/Navigation.astro";
 import Footer from "../../components/Footer.astro";
+import GoogleAnalytics from "../../components/GoogleAnalytics.astro";
 import { getPostBySlug, getAllPostSlugs } from "../../utils/getPosts";
 
 export async function getStaticPaths() {
@@ -38,6 +39,7 @@ if (!Content) {
     <meta name="generator" content={Astro.generator} />
     <title>{frontmatter.title} - Hear The Wind Sing</title>
     <meta name="description" content={frontmatter.description} />
+    <GoogleAnalytics />
     <script is:inline>
       (function () {
         const savedTheme = localStorage.getItem("theme") || "dark";

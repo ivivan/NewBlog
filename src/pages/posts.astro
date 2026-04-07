@@ -1,6 +1,7 @@
 ---
 import Navigation from "../components/Navigation.astro";
 import Footer from "../components/Footer.astro";
+import GoogleAnalytics from "../components/GoogleAnalytics.astro";
 import { getAllPosts } from "../utils/getPosts";
 
 const POSTS_PER_PAGE = 5;
@@ -21,6 +22,7 @@ const postsData = JSON.stringify(allPosts);
       name="description"
       content="Read posts from Hear The Wind Sing: technology, life, and everything in between"
     />
+    <GoogleAnalytics />
     <script is:inline>
       (function () {
         const savedTheme = localStorage.getItem("theme") || "dark";

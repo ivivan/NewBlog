@@ -1,6 +1,7 @@
 ---
 import Navigation from "../components/Navigation.astro";
 import Footer from "../components/Footer.astro";
+import GoogleAnalytics from "../components/GoogleAnalytics.astro";
 import { siteConfig, homeContent } from "../config/content.ts";
 ---
 
@@ -12,6 +13,7 @@ import { siteConfig, homeContent } from "../config/content.ts";
     <meta name="generator" content={Astro.generator} />
     <title>{siteConfig.title}</title>
     <meta name="description" content={siteConfig.description} />
+    <GoogleAnalytics />
     <script is:inline>
       (function () {
         const savedTheme = localStorage.getItem("theme") || "dark";

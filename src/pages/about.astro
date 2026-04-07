@@ -1,6 +1,7 @@
 ---
 import Navigation from "../components/Navigation.astro";
 import Footer from "../components/Footer.astro";
+import GoogleAnalytics from "../components/GoogleAnalytics.astro";
 import { aboutContent, projectsContent } from "../config/content.ts";
 import { parseMarkdown } from "../utils/markdown";
 
@@ -24,6 +25,7 @@ const timelineRows = Array.from({ length: rowCount }, (_, index) => ({
     <meta name="generator" content={Astro.generator} />
     <title>{aboutContent.meta.title}</title>
     <meta name="description" content={aboutContent.meta.description} />
+    <GoogleAnalytics />
     <script is:inline>
       (function () {
         const savedTheme = localStorage.getItem("theme") || "dark";
