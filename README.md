@@ -1,62 +1,62 @@
-# Astro Starter Kit: Blog
+# NewBlog (Astro)
 
-```sh
-npm create astro@latest -- --template blog
+Personal blog built with Astro and deployed to GitHub Pages.
+
+## Commands
+
+All commands are run from the project root:
+
+| Command | Action |
+| :-- | :-- |
+| `npm install` | Install dependencies |
+| `npm run dev` | Start Astro dev server (`http://localhost:4321`) |
+| `npm run build` | Build production site to `dist/` |
+| `npm run preview` | Preview the production build |
+| `npm run cms:proxy` | Start Decap local backend proxy (for local CMS login) |
+
+## Decap CMS
+
+This project now includes Decap CMS at `/admin/`:
+
+- Admin app: `public/admin/index.html`
+- CMS config: `public/admin/config.yml`
+- Post content folder: `src/content/posts`
+- Uploaded image folder: `public/assets/images/posts`
+
+### Availability on GitHub Pages
+
+Decap CMS works with Astro static sites, including GitHub Pages, with one requirement:
+
+- Local development: works using `local_backend: true`.
+- Production on GitHub Pages: requires a GitHub OAuth proxy service for login.
+
+Why: GitHub OAuth needs a secure server-side token exchange, and GitHub Pages is static hosting only.
+
+### Local usage
+
+Run these in separate terminals:
+
+```bash
+npm run dev
+npm run cms:proxy
 ```
 
-> 🧑‍🚀 **Seasoned astronaut?** Delete this file. Have fun!
+Then open:
 
-Features:
+- Site: `http://localhost:4321`
+- CMS: `http://localhost:4321/admin/`
 
-- ✅ Minimal styling (make it your own!)
-- ✅ 100/100 Lighthouse performance
-- ✅ SEO-friendly with canonical URLs and Open Graph data
-- ✅ Sitemap support
-- ✅ RSS Feed support
-- ✅ Markdown & MDX support
+### Production usage on GitHub Pages
 
-## 🚀 Project Structure
+1. Deploy your site normally to GitHub Pages.
+2. Host an OAuth proxy endpoint (for example on Cloudflare Workers, Vercel Functions, or your own server).
+3. Update `public/admin/config.yml`:
+	- `backend.repo` -> `YOUR_GITHUB_USERNAME/YOUR_REPO_NAME`
+	- add `backend.base_url` -> your OAuth proxy origin
+	- add `backend.auth_endpoint` -> your OAuth callback path (commonly `auth`)
+4. Register a GitHub OAuth App:
+	- Homepage URL: your production site URL
+	- Authorization callback URL: your OAuth proxy callback URL
+5. Redeploy and visit `/admin/`.
 
-Inside of your Astro project, you'll see the following folders and files:
-
-```text
-├── public/
-├── src/
-│   ├── components/
-│   ├── content/
-│   ├── layouts/
-│   └── pages/
-├── astro.config.mjs
-├── README.md
-├── package.json
-└── tsconfig.json
-```
-
-Astro looks for `.astro` or `.md` files in the `src/pages/` directory. Each page is exposed as a route based on its file name.
-
-There's nothing special about `src/components/`, but that's where we like to put any Astro/React/Vue/Svelte/Preact components.
-
-The `src/content/` directory contains "collections" of related Markdown and MDX documents. Use `getCollection()` to retrieve posts from `src/content/blog/`, and type-check your frontmatter using an optional schema. See [Astro's Content Collections docs](https://docs.astro.build/en/guides/content-collections/) to learn more.
-
-Any static assets, like images, can be placed in the `public/` directory.
-
-## 🧞 Commands
-
-All commands are run from the root of the project, from a terminal:
-
-| Command                   | Action                                           |
-| :------------------------ | :----------------------------------------------- |
-| `npm install`             | Installs dependencies                            |
-| `npm run dev`             | Starts local dev server at `localhost:4321`      |
-| `npm run build`           | Build your production site to `./dist/`          |
-| `npm run preview`         | Preview your build locally, before deploying     |
-| `npm run astro ...`       | Run CLI commands like `astro add`, `astro check` |
-| `npm run astro -- --help` | Get help using the Astro CLI                     |
-
-## 👀 Want to learn more?
-
-Check out [our documentation](https://docs.astro.build) or jump into our [Discord server](https://astro.build/chat).
-
-## Credit
-
-This theme is based off of the lovely [Bear Blog](https://github.com/HermanMartinus/bearblog/).
+Without step 2-4, production login on GitHub Pages will fail even though local CMS editing works.
