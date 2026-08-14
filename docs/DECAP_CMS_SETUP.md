@@ -1,4 +1,4 @@
-# Decap CMS Setup for GitHub Pages
+# Decap CMS Setup for Netlify Identity
 
 ## Summary
 
@@ -8,69 +8,73 @@ Decap CMS is compatible with this Astro project and content model.
 - Frontmatter used by site: `title`, `description`, `date`, `readTime`, `image`, `slug`
 - CMS route: `/admin/`
 
-## Why OAuth Proxy Is Required in Production
+## Recommended production auth flow
 
-GitHub Pages is static hosting only. Decap's `github` backend needs a server-side OAuth code exchange.
+This site is deployed to GitHub Pages, which is static hosting only. For a public static site, the recommended setup is:
 
-So:
+- Keep GitHub Pages as the public site host.
+- Create a separate Netlify site connected to the same GitHub repo.
+- Enable Netlify Identity and Git Gateway in Netlify.
+- Configure Decap to use `backend: name: git-gateway`.
 
-- Local editing can work with `local_backend: true`.
-- Production editing requires an OAuth proxy endpoint.
+This avoids exposing GitHub OAuth secrets in browser code and is the standard Netlify solution for Decap.
 
 ## Files Added
 
 - `public/admin/index.html`
 - `public/admin/config.yml`
 
-## Configure Repository
+## Configure repository and Netlify Identity
 
-In `public/admin/config.yml`, set:
+In `public/admin/config.yml`, use:
 
 ```yml
 backend:
-  name: github
-  repo: YOUR_GITHUB_USERNAME/YOUR_REPO_NAME
+  name: git-gateway
   branch: main
-  base_url: https://oauth.your-domain.com
-  auth_endpoint: auth
+
+publish_mode: simple
 ```
 
 Notes:
 
-- `repo` must match the GitHub repo that stores this Astro site.
-- `branch` should match your default deployment branch.
-- `base_url` is the OAuth proxy origin.
-- `auth_endpoint` is the OAuth path exposed by that proxy.
+- Do not keep a `repo:` field under `backend` when using `git-gateway`.
+- Use your actual default branch if it is not `main`.
+- Keep `local_backend: true` only for local Decap development if needed.
 
-## OAuth App Settings (GitHub)
+Then load the Netlify Identity widget in `public/admin/index.html`:
 
-Create a GitHub OAuth App and set:
+```html
+<script src="https://identity.netlify.com/v1/netlify-identity-widget.js"></script>
+```
 
-- Homepage URL: your public site URL (for example `https://ivivan.com`)
-- Authorization callback URL: your OAuth proxy callback URL
+## Netlify setup
 
-Exact callback URL depends on your proxy implementation.
+1. Create or import the GitHub repo into a Netlify site.
+2. Open your Netlify site dashboard.
+3. Enable Netlify Identity.
+4. In Identity settings, choose invite-only registration.
+5. Enable Git Gateway.
+6. Invite your GitHub/email account and accept the invitation.
+7. Sign in to `https://your-netlify-site-name.netlify.app/admin/` or the custom domain used for the Netlify auth site.
 
-## Local Development
+## Local development
 
-Start Astro and the local CMS proxy in separate terminals:
+You can still run the CMS locally with the local backend:
 
 ```bash
 npm run dev
-npm run cms:proxy
 ```
 
 Then open:
 
 - `http://localhost:4321/admin/`
 
-## Common Troubleshooting
+If you need local editing with Git Gateway, add `local_backend: true` while working in a local environment.
 
-- `Error: Not Found` on login:
-  - OAuth proxy URL/path is incorrect in `config.yml`.
-- `No provider` / OAuth callback mismatch:
-  - Callback URL in GitHub OAuth App does not match proxy callback.
-- Content saves but build fails:
-  - Ensure frontmatter fields are valid (`date` should be a date string).
-- Images do not show:
-  - Ensure image path starts with `/assets/images/posts/`.
+## Common troubleshooting
+
+- CMS login opens but fails: Netlify Identity or Git Gateway is disabled.
+- `git-gateway` still has a `repo:` field: remove it.
+- Content saves but build fails: check frontmatter and the branch name.
+- Images do not show: ensure image paths start with `/assets/images/posts/`.

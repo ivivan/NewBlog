@@ -1,19 +1,14 @@
 backend:
-  name: github
-  repo: ivivan/NewBlog
+  name: git-gateway
   branch: main
-  # Required for GitHub Pages production login.
-  # Host an OAuth proxy and replace with your domain + endpoint path.
-  # Example:
-  # base_url: https://oauth.your-domain.com
-  # auth_endpoint: auth
 
-local_backend: true
+# Uncomment for local development when using the Decap local backend.
+# local_backend: true
 
 media_folder: public/assets/images/posts
 public_folder: /assets/images/posts
 
-publish_mode: editorial_workflow
+publish_mode: simple
 
 collections:
   - name: posts
