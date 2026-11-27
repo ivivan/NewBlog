@@ -44,7 +44,7 @@ Direction: "research notebook at night" (from an unslop pass, 2026-11-25). Token
 
 ## Legacy content
 
-- `legacy-content/blog/` – ~621 old Hexo posts kept as a backup (tracked in git). **Not part of the build and not shown on the site.** Don't import or edit them unless asked.
+- `legacy-content/blog/` – ~621 old Hexo posts kept as a backup (tracked in git). Shown only in the hidden **风的抽屉** at `/drawer/` (2026-11-27): `src/utils/legacy.ts` reads them with `import.meta.glob` and renders with `marked` (not the site's markdown pipeline, so `$` never becomes math), strips `<font>`, inline styles and embeds, upgrades image links to https, and skips Astro template samples (they have `pubDate`) and the `转载收集` category (other people's articles; `EXCLUDED_CATEGORIES`). Drawer pages are `noindex`, not in nav or RSS; the only entrance is a line on the 404 page. Old WordPress-hosted images are gone (HTTP 410), so a script swaps failed images for "（图片已随风而去）". Don't edit the legacy files unless asked.
 - The git working tree shows the old Astro blog layer deleted (`src/content/posts`, `src/layouts`, `BlogPost`, `posts` pages, `getPosts.ts`, Decap CMS `public/admin`, `netlify.toml`) – the restructure removes it. These deletions are intentional and uncommitted.
 - `README.md` was rewritten for the new site (2026-11-27); the old Decap/Hexo docs in `docs/` were removed. Old Hexo addresses (`/YYYY/MM/DD/slug/`) now land on `src/pages/404.astro`.
 

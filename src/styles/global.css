@@ -176,6 +176,10 @@
   }
 }
 
+/* Old blog posts in the drawer: plain, centred images; a note where an image is gone */
+.legacy-post img { margin: 1.5em auto; max-width: 100%; height: auto; border-radius: 8px; }
+.legacy-post .legacy-img-gone { display: block; margin: 1em 0; font-size: 13px; color: var(--ink-3); }
+
 /* Math (KaTeX) */
 .prose .katex { font-size: 1.05em; color: inherit; }
 .prose .katex-display .katex { color: var(--ink); }
