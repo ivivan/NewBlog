@@ -1,177 +1,146 @@
 ---
-import Navigation from "../components/Navigation.astro";
-import Footer from "../components/Footer.astro";
-import GoogleAnalytics from "../components/GoogleAnalytics.astro";
-import { siteConfig, homeContent } from "../config/content.ts";
+import BaseLayout from "../layouts/BaseLayout.astro";
+import AsOf from "../components/AsOf.astro";
+import IndexChart from "../components/charts/IndexChart.astro";
+import { getCollection } from "astro:content";
+import { homeContent, siteConfig } from "../config/content.ts";
+import { pct } from "../utils/portfolio";
+import { formatDate, readingMinutes } from "../utils/reading";
+import { categoryOf } from "../utils/research";
+import portfolio from "../../public/data/portfolio-monthly.json";
+
+const featuredProjects = (await getCollection("projects", ({ data }) => !data.draft))
+  .sort((a, b) => a.data.order - b.data.order)
+  .slice(0, 3);
+const latestNotes = (await getCollection("research", ({ data }) => !data.draft))
+  .sort((a, b) => b.data.date.valueOf() - a.data.date.valueOf())
+  .slice(0, 3);
+
+const showInvesting = siteConfig.features.investing;
+const { series, metrics, as_of, base_index } = portfolio;
+const stats = [
+  { label: "年化收益", value: pct(metrics.annualised_return, { signed: true }) },
+  { label: "最大回撤", value: pct(metrics.max_drawdown) },
+  { label: "波动率", value: pct(metrics.volatility) },
+];
 ---
 
-<html lang="en">
-  <head>
-    <meta charset="utf-8" />
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="generator" content={Astro.generator} />
-    <title>{siteConfig.title}</title>
-    <meta name="description" content={siteConfig.description} />
-    <GoogleAnalytics />
-    <script is:inline>
-      (function () {
-        const savedTheme = localStorage.getItem("theme") || "dark";
-        const prefersDark = window.matchMedia(
-          "(prefers-color-scheme: dark)"
-        ).matches;
-        const initialTheme =
-          savedTheme === "system"
-            ? prefersDark
-              ? "dark"
-              : "light"
-            : savedTheme;
+<BaseLayout>
+  <!-- Hero: centered title, left blank on purpose -->
+  <section class="mx-auto max-w-3xl px-6 pt-32 pb-40 text-center sm:pt-48 sm:pb-64">
+    <h1 class="text-[44px] leading-[1.1] sm:text-[60px]">{homeContent.title}</h1>
+    <p class="mt-10 text-[20px] leading-8 text-ink-2">{homeContent.description}</p>
+  </section>
 
-        if (initialTheme === "dark") {
-          document.documentElement.classList.add("dark");
-        } else {
-          document.documentElement.classList.remove("dark");
-        }
-      })();
-    </script>
-    <script>
-      document.addEventListener("DOMContentLoaded", function () {
-        window
-          .matchMedia("(prefers-color-scheme: dark)")
-          .addEventListener("change", (e) => {
-            if (localStorage.getItem("theme") === "system") {
-              if (e.matches) {
-                document.documentElement.classList.add("dark");
-              } else {
-                document.documentElement.classList.remove("dark");
-              }
-            }
-          });
-      });
-    </script>
-    <style>
-      body {
-        margin: 0;
-        font-family:
-          system-ui,
-          -apple-system,
-          sans-serif;
-      }
-
-      @keyframes float {
-        0% {
-          transform: scale(1.2);
-        }
-        50% {
-          transform: scale(1.3);
-        }
-        100% {
-          transform: scale(1.2);
-        }
-      }
-
-      .dot-hexagon-light {
-        background-image: radial-gradient(
-            circle,
-            #80808045 1px,
-            transparent 1px
-          ),
-          radial-gradient(circle, #80808045 1px, transparent 1px);
-        background-size: 24px 41.57px;
-        background-position:
-          0 0,
-          12px 20.78px;
-      }
-
-      .dot-hexagon-dark {
-        background-image: radial-gradient(
-            circle,
-            #ffffff35 1px,
-            transparent 1px
-          ),
-          radial-gradient(circle, #ffffff35 1px, transparent 1px);
-        background-size: 24px 41.57px;
-        background-position:
-          0 0,
-          12px 20.78px;
-      }
-    </style>
-  </head>
-  <body
-    class="min-h-screen flex flex-col bg-white dark:bg-neutral-900 transition-colors duration-300"
-  >
-    <div class="relative flex-grow flex flex-col">
-      <div class="absolute inset-0 overflow-hidden pointer-events-none">
-        <div class="absolute inset-0 dot-hexagon-light dark:dot-hexagon-dark">
-        </div>
-        <div
-          class="absolute inset-0 bg-[radial-gradient(ellipse_80%_80%_at_50%_50%,transparent_0%,rgba(255,255,255,0.5)_60%,rgba(255,255,255,0.9)_85%,white_100%)] dark:bg-[radial-gradient(ellipse_80%_80%_at_50%_50%,transparent_0%,rgba(23,23,23,0.5)_60%,rgba(23,23,23,0.9)_85%,rgb(23,23,23)_100%)]"
-        >
-        </div>
-        <div
-          class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 h-[1200px] w-[1200px] rounded-full bg-neutral-400 opacity-10 blur-[100px] dark:bg-neutral-600 dark:opacity-15"
-          style="max-height: 100vh; max-width: 100vw;"
-        >
-        </div>
-      </div>
-
-      <Navigation />
-      <div class="relative flex flex-col flex-1 pt-4 min-h-0">
-        <main class="flex-grow flex flex-col min-h-0">
-          <div class="flex-1 flex items-center justify-center min-h-0">
-            <div
-              class="flex flex-col items-center justify-center w-full max-w-3xl mx-auto px-4 sm:px-6 lg:px-8"
-            >
-              <div class="w-full text-center">
-                <h1
-                  class="text-3xl font-bold tracking-tight text-neutral-900 dark:text-neutral-100 sm:text-4xl"
-                >
-                  {homeContent.title}
-                </h1>
-                <p
-                  class="mt-3 text-lg leading-7 text-neutral-600 dark:text-neutral-400 max-w-2xl mx-auto"
-                >
-                  {homeContent.description}
-                </p>
-                <div class="flex flex-row gap-4 mt-4 justify-center">
-                  <a
-                    class="group inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-neutral-900 rounded-lg hover:bg-neutral-800 dark:bg-neutral-100 dark:text-neutral-900 dark:hover:bg-neutral-200 transition-all duration-300 hover:scale-105 cursor-pointer"
-                    href={homeContent.buttons.about.href}
-                    >{homeContent.buttons.about.text}<svg
-                      class="w-4 h-4 transition-transform duration-200 group-hover:translate-x-1"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                      ><path
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                        stroke-width="2.5"
-                        d="M13 7l5 5m0 0l-5 5m5-5H6"></path></svg
-                    ></a
-                  >
-                  <a
-                    class="group inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-neutral-900 bg-white border border-neutral-300 rounded-lg hover:bg-neutral-50 dark:bg-neutral-800 dark:text-neutral-100 dark:border-neutral-600 dark:hover:bg-neutral-700 transition-all duration-300 hover:scale-105 cursor-pointer"
-                    href={homeContent.buttons.posts.href}
-                    >{homeContent.buttons.posts.text}<svg
-                      class="w-4 h-4 transition-transform duration-200 group-hover:translate-x-1"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                      ><path
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                        stroke-width="2.5"
-                        d="M13 7l5 5m0 0l-5 5m5-5H6"></path></svg
-                    ></a
-                  >
-                </div>
-              </div>
-            </div>
+  <!--
+    Two sections, deliberately different:
+    Both use the same open timeline (dots on a hairline); they differ by icon, subtitle and color:
+    左脑人工 = ink-green, node glyph; 右脑智能 = coral, wave glyph.
+  -->
+  <section class="mx-auto grid max-w-5xl gap-24 px-6 pb-32 lg:grid-cols-2 lg:gap-20">
+    <div>
+      <header class="flex items-end justify-between gap-4 pb-8">
+        <div class="flex items-center gap-4">
+          <span class="grid size-11 place-items-center rounded-full border border-line-strong text-accent" aria-hidden="true">
+            <svg viewBox="0 0 24 24" class="size-5" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="3" y="3" width="6" height="6" rx="1" /><rect x="15" y="3" width="6" height="6" rx="1" /><rect x="9" y="15" width="6" height="6" rx="1" />
+              <path d="M9 6h6M6 9v3h6v3M18 9v3h-6" />
+            </svg>
+          </span>
+          <div>
+            <h2 class="text-[24px] leading-tight">左脑人工</h2>
+            <p class="mt-1 text-[13px] text-ink-3">做过的系统 · 工程与模型</p>
           </div>
-        </main>
+        </div>
+        <a href="/projects/" class="shrink-0 text-[13px] text-ink-3 transition-colors duration-150 hover:text-accent">全部项目 →</a>
+      </header>
+      <ol class="relative ml-1.5 border-l border-line-strong">
+        {
+          featuredProjects.map((project, i) => (
+            <li class="relative pb-10 pl-8 last:pb-0">
+              <span class="absolute top-[7px] -left-[5px] size-[9px] rounded-full border border-accent bg-page" aria-hidden="true" />
+              <a href={`/projects/${project.id}/`} class="group block">
+                <span class="figure text-[12px] text-accent">P{String(i + 1).padStart(2, "0")}</span>
+                <span class="mt-2 block text-[19px] leading-8 font-bold text-ink transition-colors duration-150 group-hover:text-accent">
+                  {project.data.title}
+                </span>
+                <span class="mt-2 line-clamp-2 text-[14px] leading-7 text-ink-2">{project.data.summary}</span>
+                <span class="figure mt-3 block text-[12px] text-ink-3">{project.data.stack.slice(0, 4).join(" · ")}</span>
+              </a>
+            </li>
+          ))
+        }
+      </ol>
+    </div>
 
-        <Footer />
+    <div>
+      <header class="flex items-end justify-between gap-4 pb-8">
+        <div class="flex items-center gap-4">
+          <span class="grid size-11 place-items-center rounded-full border border-line-strong text-coral" aria-hidden="true">
+            <svg viewBox="0 0 24 24" class="size-5" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M3 9c2.5-3 5-3 7.5 0s5 3 7.5 0" /><path d="M3 15c2.5-3 5-3 7.5 0s5 3 7.5 0" /><circle cx="20.5" cy="12" r="1" />
+            </svg>
+          </span>
+          <div>
+            <h2 class="text-[24px] leading-tight">右脑智能</h2>
+            <p class="mt-1 text-[13px] text-ink-3">写下的想法 · 方法与随笔</p>
+          </div>
+        </div>
+        <a href="/research/" class="shrink-0 text-[13px] text-ink-3 transition-colors duration-150 hover:text-coral">全部笔记 →</a>
+      </header>
+      {latestNotes.length === 0 && <p class="pl-1.5 text-[14px] text-ink-3">第一篇笔记正在写，很快就来。</p>}
+      <ol class:list={["relative ml-1.5 border-l border-line-strong", latestNotes.length === 0 && "hidden"]}>
+        {
+          latestNotes.map((note) => (
+            <li class="relative pb-10 pl-8 last:pb-0">
+              <span class="absolute top-[7px] -left-[5px] size-[9px] rounded-full border border-coral bg-page" aria-hidden="true" />
+              <a href={`/research/${note.id}/`} class="group block">
+                <span class="figure text-[12px] text-coral">{formatDate(note.data.date)}</span>
+                <span class="mt-2 block text-[19px] leading-8 font-bold text-ink transition-colors duration-150 group-hover:text-coral">
+                  {note.data.title}
+                </span>
+                <span class="mt-2 line-clamp-2 text-[14px] leading-7 text-ink-2">{note.data.description}</span>
+                <span class="figure mt-3 block text-[12px] text-ink-3">
+                  {categoryOf(note.data.category).name} · {readingMinutes(note.body)} 分钟
+                </span>
+              </a>
+            </li>
+          ))
+        }
+      </ol>
+    </div>
+  </section>
+
+  {
+    showInvesting && (
+  <section class="mx-auto max-w-6xl px-6 pb-20">
+    <div>
+      <div class="flex items-baseline justify-between border-b border-line pb-4">
+        <h2 class="text-[24px]">右脑投资</h2>
+        <a href="/investing/" class="text-[13px] text-ink-3 transition-colors duration-150 hover:text-ink">完整记录 →</a>
+      </div>
+      <div class="mt-5 rounded-2xl border border-line bg-card p-5">
+        <p class="text-[13px] text-ink-3">组合净值指数，起点 = {base_index}，对比基准</p>
+        <div class="mt-4">
+          <IndexChart id="home-index" series={series} width={520} height={220} fill />
+        </div>
+        <dl class="mt-5 grid grid-cols-3 border-t border-line pt-4">
+          {
+            stats.map((s, i) => (
+              <div class={i ? "border-l border-line pl-4" : ""}>
+                <dt class="text-[12px] text-ink-3">{s.label}</dt>
+                <dd class="figure mt-1 text-[20px] text-ink">{s.value}</dd>
+              </div>
+            ))
+          }
+        </dl>
+        <div class="mt-4 flex flex-wrap items-center justify-between gap-2">
+          <AsOf date={as_of} note="月度" />
+          <span class="text-[12px] text-ink-3">示意数据，隐私过滤，不代表账户金额</span>
+        </div>
       </div>
     </div>
-  </body>
-</html>
+  </section>
+    )
+  }
+</BaseLayout>

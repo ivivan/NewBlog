@@ -1,0 +1,156 @@
+---
+// Normalized index (base 100): portfolio vs benchmark, drawn as static SVG at build time.
+// A small script adds a hover readout; without JS the chart still reads fully.
+import type { SeriesPoint } from "../../utils/portfolio";
+import { num } from "../../utils/portfolio";
+
+interface Props {
+  series: SeriesPoint[];
+  width?: number;
+  height?: number;
+  base?: number;
+  fill?: boolean;
+  id: string;
+}
+
+const { series, width = 960, height = 320, base = 100, fill = false, id } = Astro.props;
+
+const pad = { top: 16, right: 56, bottom: 28, left: 36 };
+const iw = width - pad.left - pad.right;
+const ih = height - pad.top - pad.bottom;
+
+const values = series.flatMap((p) => [p.portfolio, p.benchmark, base]);
+const step = 10;
+const yMin = Math.floor((Math.min(...values) - 2) / step) * step;
+const yMax = Math.ceil((Math.max(...values) + 2) / step) * step;
+const ticks: number[] = [];
+for (let v = yMin; v <= yMax; v += step) ticks.push(v);
+
+const x = (i: number) => pad.left + (i / (series.length - 1)) * iw;
+const y = (v: number) => pad.top + (1 - (v - yMin) / (yMax - yMin)) * ih;
+
+const path = (key: "portfolio" | "benchmark") =>
+  series.map((p, i) => `${i ? "L" : "M"}${x(i).toFixed(1)},${y(p[key]).toFixed(1)}`).join("");
+
+const area = `${path("portfolio")}L${x(series.length - 1).toFixed(1)},${(pad.top + ih).toFixed(1)}L${pad.left},${(pad.top + ih).toFixed(1)}Z`;
+
+// X labels: each January (year), plus the first point.
+const xLabels = series
+  .map((p, i) => ({ i, d: p.date }))
+  .filter(({ d, i }) => i === 0 || d.slice(5, 7) === "01")
+  .map(({ i, d }) => ({ x: x(i), label: d.slice(5, 7) === "01" || i === 0 ? d.slice(0, 4) : "" }))
+  .filter((l, idx, arr) => idx === arr.findIndex((o) => o.label === l.label));
+
+const last = series[series.length - 1];
+const lastI = series.length - 1;
+// Keep end labels from colliding.
+let yP = y(last.portfolio);
+let yB = y(last.benchmark);
+if (Math.abs(yP - yB) < 16) {
+  const mid = (yP + yB) / 2;
+  if (yP <= yB) { yP = mid - 8; yB = mid + 8; } else { yP = mid + 8; yB = mid - 8; }
+}
+
+const points = series.map((p, i) => ({
+  d: p.date.slice(0, 7),
+  p: p.portfolio,
+  b: p.benchmark,
+  x: +x(i).toFixed(1),
+  yp: +y(p.portfolio).toFixed(1),
+  yb: +y(p.benchmark).toFixed(1),
+}));
+---
+
+<figure class="index-chart relative" data-chart-id={id}>
+  <svg
+    viewBox={`0 0 ${width} ${height}`}
+    class="block h-auto w-full overflow-visible"
+    role="img"
+    aria-label={`净值指数，起点 ${base}。最新：组合 ${num(last.portfolio)}，基准 ${num(last.benchmark)}（${last.date.slice(0, 7)}）`}
+  >
+    <g class="figure" font-size="11" fill="var(--ink-3)">
+      {
+        ticks.map((t) => (
+          <g>
+            <line
+              x1={pad.left}
+              x2={pad.left + iw}
+              y1={y(t)}
+              y2={y(t)}
+              stroke={t === base ? "var(--line-strong)" : "var(--line)"}
+              stroke-dasharray={t === base ? "none" : "2 4"}
+            />
+            <text x={pad.left - 8} y={y(t) + 4} text-anchor="end">{t}</text>
+          </g>
+        ))
+      }
+      {xLabels.map((l) => <text x={l.x} y={height - 8} text-anchor="start">{l.label}</text>)}
+    </g>
+
+    {fill && <path d={area} fill="var(--accent-soft)" />}
+    <path d={path("benchmark")} fill="none" stroke="var(--bench)" stroke-width="1.5" stroke-dasharray="4 4" stroke-linejoin="round" />
+    <path d={path("portfolio")} fill="none" stroke="var(--accent)" stroke-width="2" stroke-linejoin="round" stroke-linecap="round" />
+
+    <circle cx={x(lastI)} cy={y(last.portfolio)} r="3.5" fill="var(--accent)" />
+    <circle cx={x(lastI)} cy={y(last.benchmark)} r="3" fill="var(--bench)" />
+    <g class="figure" font-size="12">
+      <text x={x(lastI) + 10} y={yP + 4} fill="var(--accent)">{num(last.portfolio)}</text>
+      <text x={x(lastI) + 10} y={yB + 4} fill="var(--ink-3)">{num(last.benchmark)}</text>
+    </g>
+
+    <g class="hover-layer" opacity="0" style="transition: opacity 120ms cubic-bezier(0.22,1,0.36,1)">
+      <line class="hover-line" y1={pad.top} y2={pad.top + ih} stroke="var(--line-strong)" />
+      <circle class="hover-p" r="3.5" fill="var(--accent)" stroke="var(--page)" stroke-width="2" />
+      <circle class="hover-b" r="3" fill="var(--bench)" stroke="var(--page)" stroke-width="2" />
+    </g>
+    <rect class="hover-target" x={pad.left} y={pad.top} width={iw} height={ih} fill="transparent" />
+  </svg>
+
+  <figcaption
+    class="hover-readout figure pointer-events-none absolute top-0 left-0 rounded-md border border-line bg-card px-2.5 py-1.5 text-[12px] leading-5 text-ink-2 opacity-0 shadow-[0_8px_24px_rgba(0,0,0,0.08)]"
+    style="transition: opacity 120ms cubic-bezier(0.22,1,0.36,1)"
+    aria-hidden="true"
+  >
+  </figcaption>
+  <script type="application/json" set:html={JSON.stringify({ w: width, points })} />
+</figure>
+
+<script>
+  document.querySelectorAll<HTMLElement>(".index-chart").forEach((fig) => {
+    const data = JSON.parse(fig.querySelector('script[type="application/json"]')!.textContent!);
+    const svg = fig.querySelector("svg")!;
+    const target = fig.querySelector<SVGRectElement>(".hover-target")!;
+    const layer = fig.querySelector<SVGGElement>(".hover-layer")!;
+    const line = fig.querySelector<SVGLineElement>(".hover-line")!;
+    const cp = fig.querySelector<SVGCircleElement>(".hover-p")!;
+    const cb = fig.querySelector<SVGCircleElement>(".hover-b")!;
+    const readout = fig.querySelector<HTMLElement>(".hover-readout")!;
+    const fmt = (v: number) => v.toFixed(1);
+
+    function show(evt: PointerEvent) {
+      const rect = svg.getBoundingClientRect();
+      const scale = rect.width / data.w;
+      const vx = (evt.clientX - rect.left) / scale;
+      let best = data.points[0];
+      for (const p of data.points) if (Math.abs(p.x - vx) < Math.abs(best.x - vx)) best = p;
+      line.setAttribute("x1", best.x);
+      line.setAttribute("x2", best.x);
+      cp.setAttribute("cx", best.x);
+      cp.setAttribute("cy", best.yp);
+      cb.setAttribute("cx", best.x);
+      cb.setAttribute("cy", best.yb);
+      readout.innerHTML = `<div class="text-ink-3">${best.d}</div><div><span class="text-accent">组合 ${fmt(best.p)}</span> · 基准 ${fmt(best.b)}</div>`;
+      const left = best.x * scale;
+      const w = readout.offsetWidth;
+      readout.style.transform = `translate(${Math.min(Math.max(left - w / 2, 0), rect.width - w)}px, ${Math.max(best.yp * scale - 64, -8)}px)`;
+      layer.setAttribute("opacity", "1");
+      readout.style.opacity = "1";
+    }
+    function hide() {
+      layer.setAttribute("opacity", "0");
+      readout.style.opacity = "0";
+    }
+    target.addEventListener("pointermove", show);
+    target.addEventListener("pointerleave", hide);
+  });
+</script>

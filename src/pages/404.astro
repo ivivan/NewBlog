@@ -1,0 +1,55 @@
+---
+// GitHub Pages serves dist/404.html for any address that does not exist,
+// including the old Hexo addresses (/YYYY/MM/DD/slug/) that the new site no longer has.
+import BaseLayout from "../layouts/BaseLayout.astro";
+
+const links = [
+  { href: "/", label: "回首页" },
+  { href: "/projects/", label: "看项目" },
+  { href: "/research/", label: "读笔记" },
+];
+---
+
+<BaseLayout title="页面不见了" description="这个页面不存在，或者已经被风吹走了。">
+  <section class="mx-auto max-w-2xl px-6 pt-32 pb-24 text-center sm:pt-44">
+    <p class="figure text-[13px] text-ink-3">404</p>
+    <h1 class="mt-6 text-[36px] leading-[1.2] sm:text-[44px]">这一页被风吹走了</h1>
+    <p class="mx-auto mt-6 max-w-[30rem] text-[16px] leading-8 text-ink-2">
+      你要找的页面不在这里。它可能从来没有存在过，也可能是旧博客里的一篇文章：旧文章已经收起来了，新的笔记在慢慢写。
+    </p>
+    <p class="figure mt-6 text-[12px] break-all text-ink-3" id="missing-path"></p>
+
+    <ul class="mt-12 flex flex-wrap justify-center gap-3">
+      {
+        links.map((l, i) => (
+          <li>
+            <a
+              href={l.href}
+              class:list={[
+                "inline-flex h-11 items-center rounded-lg px-5 text-[14px] font-medium transition-colors duration-150",
+                i === 0 ? "bg-ink text-page hover:opacity-90" : "border border-line-strong bg-card text-ink hover:bg-raised",
+              ]}
+            >
+              {l.label}
+            </a>
+          </li>
+        ))
+      }
+    </ul>
+
+    <p class="mt-16 text-[15px] text-ink-3">一曲清歌满樽酒，人生何处不相逢</p>
+  </section>
+
+  <script is:inline>
+    // Show which address was asked for (safe: textContent, never HTML)
+    (function () {
+      var el = document.getElementById("missing-path");
+      if (!el) return;
+      try {
+        el.textContent = decodeURIComponent(location.pathname);
+      } catch (e) {
+        el.textContent = location.pathname;
+      }
+    })();
+  </script>
+</BaseLayout>

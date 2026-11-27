@@ -1,0 +1,48 @@
+---
+// Month-by-month portfolio returns, one row per year. Color intensity scales with |return|.
+import { monthlyReturns, pct, type SeriesPoint } from "../../utils/portfolio";
+
+interface Props {
+  series: SeriesPoint[];
+}
+
+const rows = monthlyReturns(Astro.props.series);
+const maxAbs = Math.max(...rows.flatMap((r) => r.months.filter((m): m is number => m !== null).map(Math.abs)));
+
+const cellStyle = (r: number | null) => {
+  if (r === null) return "";
+  const strength = Math.round(8 + (Math.abs(r) / maxAbs) * 30);
+  const tone = r >= 0 ? "var(--pos)" : "var(--neg)";
+  return `background: color-mix(in oklab, ${tone} ${strength}%, transparent)`;
+};
+
+const months = Array.from({ length: 12 }, (_, i) => `${i + 1}月`);
+---
+
+<div class="overflow-x-auto">
+  <table class="figure w-full min-w-[720px] border-separate border-spacing-[3px] text-[12px]">
+    <caption class="sr-only">月度收益（组合），按年份分行</caption>
+    <thead>
+      <tr class="text-ink-3">
+        <th class="w-14 py-1 text-left font-normal">年份</th>
+        {months.map((m) => <th class="py-1 text-center font-normal">{m}</th>)}
+        <th class="w-16 py-1 text-right font-normal">全年</th>
+      </tr>
+    </thead>
+    <tbody>
+      {
+        rows.map((row) => (
+          <tr>
+            <th class="py-1 text-left font-normal text-ink-2">{row.year}</th>
+            {row.months.map((r) => (
+              <td class="h-9 rounded-[4px] text-center text-ink" style={cellStyle(r)}>
+                {r === null ? <span class="text-ink-3">·</span> : pct(r, { signed: true })}
+              </td>
+            ))}
+            <td class={`text-right ${row.total >= 0 ? "text-pos" : "text-neg"}`}>{pct(row.total, { signed: true })}</td>
+          </tr>
+        ))
+      }
+    </tbody>
+  </table>
+</div>

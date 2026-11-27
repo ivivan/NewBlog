@@ -1,0 +1,73 @@
+---
+import BaseLayout from "../layouts/BaseLayout.astro";
+import NoteList from "../components/NoteList.astro";
+import TagBar from "../components/TagBar.astro";
+import { categoryHref, getNotes, groupByCategory, tagCounts } from "../utils/research";
+
+const PER_SECTION = 3;
+
+const notes = await getNotes();
+const tags = tagCounts(notes);
+const groups = groupByCategory(notes);
+---
+
+<BaseLayout title="研究笔记" description="关于 AI 系统、风险建模与投资方法的短篇研究笔记。">
+  <section class="mx-auto max-w-4xl px-6 pt-20">
+    <h1 class="text-[36px] leading-[1.15]">研究笔记</h1>
+    <p class="mt-4 max-w-[36rem] text-[15px] leading-7 text-ink-2">
+      关于 AI 系统、风险建模与投资方法的短篇笔记。不定期更新，不追求频率。
+    </p>
+    <p class="mt-2 text-[13px] text-ink-3">
+      {notes.length > 0 && <>共 <span class="figure">{notes.length}</span> 篇 · </>}<a href="/rss.xml" class="underline decoration-line-strong underline-offset-4 hover:text-ink">RSS 订阅</a>
+    </p>
+
+    <!-- Jump to a category's own page -->
+    <nav aria-label="分类" class="mt-10 flex flex-wrap gap-2">
+      {
+        groups.map(({ category, notes: list }) => (
+          <a
+            href={categoryHref(category.id)}
+            class="inline-flex h-9 items-center gap-2 rounded-md border border-line px-3 text-[14px] text-ink-2 transition-colors duration-150 hover:bg-raised hover:text-ink"
+          >
+            {category.name}
+            <span class="figure text-[12px] text-ink-3">{list.length}</span>
+          </a>
+        ))
+      }
+    </nav>
+
+    {
+      groups.map(({ category, notes: list }) => (
+        <section class="mt-16" aria-labelledby={`cat-${category.id}`}>
+          <div class="flex items-end justify-between gap-4 pb-4">
+            <div>
+              <h2 id={`cat-${category.id}`} class="text-[22px] leading-tight">
+                <a href={categoryHref(category.id)} class="transition-colors duration-150 hover:text-accent">{category.name}</a>
+              </h2>
+              <p class="mt-2 text-[14px] text-ink-3">{category.description}</p>
+            </div>
+            {list.length > PER_SECTION && (
+              <a href={categoryHref(category.id)} class="shrink-0 text-[13px] text-ink-3 transition-colors duration-150 hover:text-ink">
+                全部 <span class="figure">{list.length}</span> 篇 →
+              </a>
+            )}
+          </div>
+          {list.length > 0 ? (
+            <NoteList notes={list.slice(0, PER_SECTION)} showCategory={false} />
+          ) : (
+            <p class="border-t border-line py-6 text-[14px] text-ink-3">这一类还没有文章。</p>
+          )}
+        </section>
+      ))
+    }
+
+    {
+      tags.length > 0 && (
+        <section class="mt-16 border-t border-line pt-8">
+          <h2 class="text-[15px] text-ink-2">按标签浏览</h2>
+          <div class="mt-4"><TagBar tags={tags} /></div>
+        </section>
+      )
+    }
+  </section>
+</BaseLayout>

@@ -1,0 +1,50 @@
+---
+import BaseLayout from "../../../layouts/BaseLayout.astro";
+import NoteList from "../../../components/NoteList.astro";
+import { researchCategories } from "../../../config/content";
+import { categoryHref, getNotes, groupByCategory } from "../../../utils/research";
+
+// Every category gets a page, even before it has notes, so links to it never break.
+export async function getStaticPaths() {
+  const groups = groupByCategory(await getNotes());
+  return groups.map(({ category, notes }) => ({
+    params: { category: category.id },
+    props: { category, notes },
+  }));
+}
+
+const { category, notes } = Astro.props;
+---
+
+<BaseLayout title={`${category.name} · 研究笔记`} description={category.description}>
+  <section class="mx-auto max-w-4xl px-6 pt-20">
+    <a href="/research/" class="text-[13px] text-ink-3 transition-colors duration-150 hover:text-ink">← 研究笔记</a>
+    <h1 class="mt-4 text-[32px] leading-[1.15]">{category.name}</h1>
+    <p class="mt-3 max-w-[36rem] text-[15px] leading-7 text-ink-2">{category.description}</p>
+    {notes.length > 0 && <p class="mt-2 text-[13px] text-ink-3"><span class="figure">{notes.length}</span> 篇</p>}
+
+    <nav aria-label="其他分类" class="mt-10 flex flex-wrap gap-2">
+      {
+        researchCategories.map((c) => (
+          <a
+            href={categoryHref(c.id)}
+            aria-current={c.id === category.id ? "page" : undefined}
+            class="inline-flex h-9 items-center rounded-md border border-line px-3 text-[14px] text-ink-2 transition-colors duration-150 hover:bg-raised hover:text-ink aria-[current=page]:border-line-strong aria-[current=page]:bg-raised aria-[current=page]:text-ink"
+          >
+            {c.name}
+          </a>
+        ))
+      }
+    </nav>
+
+    <div class="mt-8">
+      {
+        notes.length > 0 ? (
+          <NoteList notes={notes} showCategory={false} />
+        ) : (
+          <p class="border-t border-line pt-8 text-[15px] text-ink-3">这一类还没有文章，很快就来。</p>
+        )
+      }
+    </div>
+  </section>
+</BaseLayout>

@@ -1,0 +1,22 @@
+---
+interface Props {
+  tags: { tag: string; count: number }[];
+  active?: string;
+}
+const { tags, active } = Astro.props;
+const base = "figure inline-flex h-8 items-center gap-2 rounded-md border px-3 text-[12px] transition-colors duration-150";
+const on = "border-line-strong bg-raised text-ink";
+const off = "border-line text-ink-2 hover:bg-raised hover:text-ink";
+---
+
+<nav aria-label="按标签筛选" class="flex flex-wrap gap-2">
+  <a href="/research/" class={`${base} ${!active ? on : off}`} aria-current={!active ? "page" : undefined}>全部</a>
+  {
+    tags.map(({ tag, count }) => (
+      <a href={`/research/tag/${tag}/`} class={`${base} ${active === tag ? on : off}`} aria-current={active === tag ? "page" : undefined}>
+        #{tag}
+        <span class="text-ink-3">{count}</span>
+      </a>
+    ))
+  }
+</nav>

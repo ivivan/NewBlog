@@ -1,0 +1,72 @@
+---
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import "katex/dist/katex.min.css";
+import { getCollection, render } from "astro:content";
+import { readingMinutes } from "../../utils/reading";
+
+export async function getStaticPaths() {
+  const projects = (await getCollection("projects", ({ data }) => !data.draft)).sort(
+    (a, b) => a.data.order - b.data.order
+  );
+  return projects.map((project, i) => ({
+    params: { slug: project.id },
+    props: { project, next: projects[i + 1] ?? null },
+  }));
+}
+
+const { project, next } = Astro.props;
+const { Content, headings } = await render(project);
+const sections = headings.filter((h) => h.depth === 2 || h.depth === 3);
+---
+
+<BaseLayout title={project.data.title} description={project.data.summary}>
+  <article class="mx-auto grid max-w-6xl gap-12 px-6 pt-16 lg:grid-cols-[200px_1fr]">
+    <aside class="hidden lg:block">
+      <div class="sticky top-8">
+        <a href="/projects/" class="text-[13px] text-ink-3 transition-colors duration-150 hover:text-ink">← 项目</a>
+        {
+          sections.length > 0 && (
+            <ol class="mt-8 space-y-2 border-l border-line">
+              {sections.map((h) => (
+                <li class={h.depth === 2 ? "pt-3 first:pt-0" : ""}>
+                  <a
+                    href={`#${h.slug}`}
+                    class:list={[
+                      "-ml-px block border-l border-transparent transition-colors duration-150 hover:border-ink-3 hover:text-ink",
+                      h.depth === 2 ? "pl-4 text-[13px] font-bold text-ink-2" : "pl-7 text-[13px] text-ink-3",
+                    ]}
+                  >
+                    {h.text}
+                  </a>
+                </li>
+              ))}
+            </ol>
+          )
+        }
+      </div>
+    </aside>
+
+    <div class="min-w-0 max-w-[46rem]">
+      <a href="/projects/" class="text-[13px] text-ink-3 lg:hidden">← 项目</a>
+      <h1 class="mt-4 text-[32px] leading-[1.25] lg:mt-0">{project.data.title}</h1>
+      <p class="mt-4 text-[16px] leading-7 text-ink-2">{project.data.summary}</p>
+      <dl class="figure mt-6 flex flex-wrap gap-x-8 gap-y-2 border-y border-line py-3 text-[12px]">
+        <div class="flex gap-2"><dt class="shrink-0 whitespace-nowrap text-ink-3">技术栈</dt><dd class="text-ink-2">{project.data.stack.join(" · ")}</dd></div>
+        <div class="flex gap-2"><dt class="shrink-0 whitespace-nowrap text-ink-3">阅读</dt><dd class="text-ink-2">{readingMinutes(project.body)} 分钟</dd></div>
+      </dl>
+
+      <div class="prose mt-10 max-w-none">
+        <Content />
+      </div>
+
+      {
+        next && (
+          <a href={`/projects/${next.id}/`} class="group mt-16 block border-t border-line pt-6">
+            <span class="text-[13px] text-ink-3">下一个项目</span>
+            <span class="mt-1 block font-bold text-[19px] text-ink transition-colors duration-150 group-hover:text-accent">{next.data.title} →</span>
+          </a>
+        )
+      }
+    </div>
+  </article>
+</BaseLayout>

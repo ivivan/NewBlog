@@ -1,0 +1,37 @@
+---
+// One stacked bar + aligned legend. The largest slice takes the accent; the rest step down the ink ramp.
+import { pct } from "../../utils/portfolio";
+
+interface Props {
+  title: string;
+  items: { label: string; weight: number }[];
+}
+
+const { title, items } = Astro.props;
+const sorted = [...items].sort((a, b) => b.weight - a.weight);
+const tones = [
+  "var(--accent)",
+  "color-mix(in oklab, var(--ink) 55%, transparent)",
+  "color-mix(in oklab, var(--ink) 36%, transparent)",
+  "color-mix(in oklab, var(--ink) 22%, transparent)",
+  "color-mix(in oklab, var(--ink) 12%, transparent)",
+];
+---
+
+<div>
+  <h3 class="font-sans text-[14px] font-medium text-ink">{title}</h3>
+  <div class="mt-4 flex h-3 gap-[2px] overflow-hidden rounded-[4px]" role="img" aria-label={`${title}：${sorted.map((s) => `${s.label} ${pct(s.weight, { digits: 0 })}`).join("，")}`}>
+    {sorted.map((s, i) => <span style={`width:${s.weight * 100}%; background:${tones[i % tones.length]}`} />)}
+  </div>
+  <ul class="mt-4 divide-y divide-line">
+    {
+      sorted.map((s, i) => (
+        <li class="flex h-9 items-center gap-3 text-[14px]">
+          <span class="size-2.5 shrink-0 rounded-[2px]" style={`background:${tones[i % tones.length]}`} />
+          <span class="text-ink-2">{s.label}</span>
+          <span class="figure ml-auto text-[13px] text-ink">{pct(s.weight, { digits: 0 })}</span>
+        </li>
+      ))
+    }
+  </ul>
+</div>

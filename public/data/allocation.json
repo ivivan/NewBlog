@@ -1,0 +1,18 @@
+{
+  "illustrative": true,
+  "note": "Mock/placeholder data for structural development. Not real account data.",
+  "as_of": "2026-09-30",
+  "asset_classes": [
+    { "label": "股票 / ETF", "weight": 0.55 },
+    { "label": "固定收益", "weight": 0.2 },
+    { "label": "现金", "weight": 0.12 },
+    { "label": "另类资产", "weight": 0.08 },
+    { "label": "其他", "weight": 0.05 }
+  ],
+  "regions": [
+    { "label": "Australia", "weight": 0.4 },
+    { "label": "US", "weight": 0.3 },
+    { "label": "Global", "weight": 0.22 },
+    { "label": "Cash", "weight": 0.08 }
+  ]
+}
