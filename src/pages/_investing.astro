@@ -1,0 +1,123 @@
+---
+import BaseLayout from "../layouts/BaseLayout.astro";
+import AsOf from "../components/AsOf.astro";
+import IndexChart from "../components/charts/IndexChart.astro";
+import DrawdownChart from "../components/charts/DrawdownChart.astro";
+import MonthlyGrid from "../components/charts/MonthlyGrid.astro";
+import AllocationBar from "../components/charts/AllocationBar.astro";
+import { pct } from "../utils/portfolio";
+import portfolio from "../../public/data/portfolio-monthly.json";
+import allocation from "../../public/data/allocation.json";
+
+const { series, metrics, as_of, methodology, base_index, illustrative } = portfolio;
+const { asset_classes, regions } = allocation;
+
+const stats = [
+  { label: "年化收益", value: pct(metrics.annualised_return, { signed: true }) },
+  { label: "成立以来", value: pct(metrics.since_inception_return, { signed: true }) },
+  { label: "最大回撤", value: pct(metrics.max_drawdown) },
+  { label: "年化波动率", value: pct(metrics.volatility) },
+];
+
+const first = series[0].date.slice(0, 7);
+const lastDate = series[series.length - 1].date.slice(0, 7);
+
+const disclosures = [
+  { term: "收益口径", text: methodology },
+  { term: "数据频率", text: "月末快照，按月更新；不展示日内或逐笔数据。" },
+  { term: "不公开", text: "账户余额与金额、券商与账户信息、具体标的与精确权重、交易日期与价格、原始导出文件。" },
+  { term: "数据来源", text: "私有记账与计算流程导出去标识化的汇总 JSON；本仓库只包含这些汇总结果。" },
+  { term: "性质", text: "研究记录，不构成投资建议；过往表现不代表未来。" },
+];
+---
+
+<BaseLayout title="投资记录" description="一个经过隐私过滤的长期投资过程：归一化净值指数、回撤、月度收益与资产配置。">
+  <section class="mx-auto max-w-6xl px-6 pt-20">
+    <div class="grid gap-6 lg:grid-cols-[1fr_auto] lg:items-end">
+      <div>
+        <h1 class="text-[36px] leading-[1.15]">投资记录</h1>
+        <p class="mt-4 max-w-[40rem] text-[15px] leading-7 text-ink-2">
+          长期投资过程的公开视图。净值归一化为指数（起点 = {base_index}），只展示表现与风险的形状，不展示账户规模或持仓。
+        </p>
+      </div>
+      <div class="flex flex-col gap-1 lg:items-end">
+        <AsOf date={as_of} note="月度" />
+        {illustrative && <span class="text-[12px] text-neg">当前为示意数据，非真实账户</span>}
+      </div>
+    </div>
+
+    <dl class="mt-12 grid grid-cols-2 gap-px border-y border-line bg-line sm:grid-cols-4">
+      {
+        stats.map((s) => (
+          <div class="bg-page py-5 pl-5 first:pl-0 [&:nth-child(3)]:pl-0 sm:[&:nth-child(3)]:pl-5">
+            <dt class="text-[13px] text-ink-3">{s.label}</dt>
+            <dd class="figure mt-2 text-[28px] leading-none text-ink">{s.value}</dd>
+          </div>
+        ))
+      }
+    </dl>
+  </section>
+
+  <!-- Main chart: index, with drawdown sharing its x axis -->
+  <section class="mx-auto max-w-6xl px-6 pt-12">
+    <div class="rounded-2xl border border-line bg-card p-6">
+      <div class="flex flex-wrap items-baseline justify-between gap-4">
+        <h2 class="text-[20px]">净值指数</h2>
+        <div class="flex items-center gap-5 text-[13px] text-ink-2">
+          <span class="inline-flex items-center gap-2"><span class="h-0.5 w-4 bg-accent"></span>组合</span>
+          <span class="inline-flex items-center gap-2"><span class="w-4 border-t-[1.5px] border-dashed border-bench"></span>基准</span>
+          <span class="figure text-[12px] text-ink-3">{first} — {lastDate}</span>
+        </div>
+      </div>
+      <div class="mt-6">
+        <IndexChart id="investing-index" series={series} width={1040} height={340} />
+      </div>
+      <div class="mt-6 border-t border-line pt-5">
+        <h3 class="font-sans text-[13px] font-normal text-ink-3">回撤（相对前高，%）</h3>
+        <div class="mt-3">
+          <DrawdownChart series={series} width={1040} />
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="mx-auto max-w-6xl px-6 pt-16">
+    <div class="flex items-baseline justify-between border-b border-line pb-4">
+      <h2 class="text-[24px]">月度收益</h2>
+      <span class="text-[13px] text-ink-3">组合指数逐月变化</span>
+    </div>
+    <div class="mt-6">
+      <MonthlyGrid series={series} />
+    </div>
+  </section>
+
+  <section class="mx-auto max-w-6xl px-6 pt-16">
+    <div class="flex items-baseline justify-between border-b border-line pb-4">
+      <h2 class="text-[24px]">配置</h2>
+      <AsOf date={allocation.as_of} note="大类，取整" />
+    </div>
+    <div class="mt-8 grid gap-12 md:grid-cols-2">
+      <AllocationBar title="资产类别" items={asset_classes} />
+      <AllocationBar title="地区 / 币种" items={regions} />
+    </div>
+  </section>
+
+  <section id="disclosures" class="mx-auto max-w-6xl scroll-mt-8 px-6 pt-16">
+    <div class="border-b border-line pb-4">
+      <h2 class="text-[24px]">方法与披露</h2>
+    </div>
+    <dl class="divide-y divide-line">
+      {
+        disclosures.map((d) => (
+          <div class="grid gap-1 py-4 sm:grid-cols-[120px_1fr] sm:gap-6">
+            <dt class="text-[14px] text-ink">{d.term}</dt>
+            <dd class="max-w-[48rem] text-[14px] leading-6 text-ink-2">{d.text}</dd>
+          </div>
+        ))
+      }
+    </dl>
+    <p class="mt-6 text-[13px] text-ink-3">
+      为什么用时间加权收益而不是账户总额：<a href="/research/why-time-weighted-return/" class="text-accent underline decoration-line-strong underline-offset-4">读这篇笔记</a>
+    </p>
+  </section>
+</BaseLayout>

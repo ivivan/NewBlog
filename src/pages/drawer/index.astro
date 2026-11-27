@@ -1,0 +1,109 @@
+---
+// 风的抽屉: the hidden archive of the old blog. Reached from the 404 page only; not in nav, RSS or search.
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import { formatLegacyDate, getLegacyPosts, legacyHref } from "../../utils/legacy";
+
+const posts = getLegacyPosts();
+const years = [...new Set(posts.map((p) => p.year))].sort((a, b) => b - a);
+const byYear = years.map((year) => ({ year, posts: posts.filter((p) => p.year === year) }));
+const first = posts[posts.length - 1];
+const last = posts[0];
+
+// Compact list for the client-side "blow another one" picker
+const pool = posts.map((p) => ({
+  h: legacyHref(p.slug),
+  t: p.title,
+  d: formatLegacyDate(p.date),
+  c: p.categories[0] ?? "",
+  e: p.excerpt,
+}));
+const fallback = pool[0];
+---
+
+<BaseLayout title="风的抽屉" description="旧博客 2009–2016" noindex>
+  <section class="mx-auto max-w-3xl px-6 pt-24 sm:pt-32">
+    <p class="figure text-[12px] text-ink-3">旧博客 · {first.year}–{last.year} · {posts.length} 篇</p>
+    <h1 class="mt-4 text-[40px] leading-[1.15]">风的抽屉</h1>
+    <p class="mt-5 max-w-[36rem] text-[15px] leading-8 text-ink-2">
+      这里收着 {first.year} 到 {last.year} 年写下的旧博客：读研、出国、看电影、碎碎念。它们不在首页，也不会出现在搜索结果里，只有被风吹到这里的人才看得到。文字保持原样，有些图片和链接已经随风而去。
+    </p>
+
+    <!-- A random post, picked in the browser; without JS it shows the newest -->
+    <div class="mt-12 rounded-2xl border border-line bg-card p-6 sm:p-8" id="blown">
+      <p class="figure text-[12px] text-coral">随风吹来一篇</p>
+      <a href={fallback.h} class="group mt-3 block" data-field="link">
+        <span class="block text-[22px] leading-9 font-bold text-ink transition-colors duration-150 group-hover:text-accent" data-field="title">{fallback.t}</span>
+        <span class="figure mt-2 block text-[12px] text-ink-3"><span data-field="date">{fallback.d}</span> · <span data-field="cat">{fallback.c}</span></span>
+        <span class="mt-4 block text-[15px] leading-8 text-ink-2" data-field="excerpt">{fallback.e}</span>
+      </a>
+      <div class="mt-6 flex flex-wrap gap-3">
+        <a href={fallback.h} data-field="link2" class="inline-flex h-10 items-center rounded-lg bg-ink px-4 text-[14px] font-medium text-page transition-opacity duration-150 hover:opacity-90">读这一篇 →</a>
+        <button type="button" id="blow" class="inline-flex h-10 items-center rounded-lg border border-line-strong bg-card px-4 text-[14px] text-ink transition-colors duration-150 hover:bg-raised">再吹一篇</button>
+      </div>
+    </div>
+  </section>
+
+  <section class="mx-auto max-w-3xl px-6 pt-16">
+    <h2 class="text-[20px]">按年份翻</h2>
+    <div class="mt-6 divide-y divide-line border-y border-line">
+      {
+        byYear.map(({ year, posts: list }, i) => (
+          <details class="group" open={i === 0}>
+            <summary class="flex cursor-pointer list-none items-baseline justify-between py-4 [&::-webkit-details-marker]:hidden">
+              <span class="figure text-[18px] text-ink">{year}</span>
+              <span class="figure text-[12px] text-ink-3">
+                {list.length} 篇 <span class="inline-block transition-transform duration-150 group-open:rotate-90">›</span>
+              </span>
+            </summary>
+            <ul class="pb-4">
+              {list.map((p) => (
+                <li>
+                  <a href={legacyHref(p.slug)} class="group/item grid grid-cols-[52px_1fr] gap-3 py-1.5 text-[14px]">
+                    <span class="figure pt-0.5 text-[12px] text-ink-3">{formatLegacyDate(p.date).slice(5)}</span>
+                    <span class="text-ink-2 transition-colors duration-150 group-hover/item:text-ink">{p.title}</span>
+                  </a>
+                </li>
+              ))}
+            </ul>
+          </details>
+        ))
+      }
+    </div>
+    <p class="mt-10 text-[13px] text-ink-3">
+      <a href="/" class="underline decoration-line-strong underline-offset-4 hover:text-ink">回到现在 →</a>
+    </p>
+  </section>
+
+  <script is:inline type="application/json" id="drawer-pool" set:html={JSON.stringify(pool)} />
+  <script is:inline>
+    (function () {
+      var el = document.getElementById("drawer-pool");
+      if (!el) return;
+      var pool = JSON.parse(el.textContent || "[]");
+      if (!pool.length) return;
+      var box = document.getElementById("blown");
+      var last = -1;
+      function set(field, attr, value) {
+        var node = box.querySelector('[data-field="' + field + '"]');
+        if (!node) return;
+        if (attr) node.setAttribute(attr, value);
+        else node.textContent = value;
+      }
+      function blow() {
+        var i = Math.floor(Math.random() * pool.length);
+        if (pool.length > 1 && i === last) i = (i + 1) % pool.length;
+        last = i;
+        var p = pool[i];
+        set("link", "href", p.h);
+        set("link2", "href", p.h);
+        set("title", null, p.t);
+        set("date", null, p.d);
+        set("cat", null, p.c);
+        set("excerpt", null, p.e);
+      }
+      blow();
+      var btn = document.getElementById("blow");
+      if (btn) btn.addEventListener("click", blow);
+    })();
+  </script>
+</BaseLayout>

@@ -1,0 +1,58 @@
+---
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import "katex/dist/katex.min.css";
+import { render } from "astro:content";
+import { categoryHref, categoryOf, getNotes } from "../../utils/research";
+import { formatDate, readingMinutes } from "../../utils/reading";
+
+export async function getStaticPaths() {
+  const notes = await getNotes(); // newest first
+  return notes.map((note, i) => ({
+    params: { slug: note.id },
+    props: { note, newer: notes[i - 1] ?? null, older: notes[i + 1] ?? null },
+  }));
+}
+
+const { note, newer, older } = Astro.props;
+const { Content } = await render(note);
+const category = categoryOf(note.data.category);
+---
+
+<BaseLayout title={note.data.title} description={note.data.description}>
+  <article class="mx-auto max-w-[46rem] px-6 pt-16">
+    <a href="/research/" class="text-[13px] text-ink-3 transition-colors duration-150 hover:text-ink">← 研究笔记</a>
+    <h1 class="mt-6 text-[32px] leading-[1.3]">{note.data.title}</h1>
+    <p class="mt-4 text-[16px] leading-7 text-ink-2">{note.data.description}</p>
+    <div class="figure mt-6 flex flex-wrap items-center gap-x-4 gap-y-1 border-y border-line py-3 text-[12px] text-ink-3">
+      <a href={categoryHref(category.id)} class="font-sans text-accent transition-colors duration-150 hover:text-ink">{category.name}</a>
+      <time datetime={formatDate(note.data.date)}>{formatDate(note.data.date)}</time>
+      <span>{readingMinutes(note.body)} 分钟</span>
+      {note.data.tags.map((t) => <a href={`/research/tag/${t}/`} class="transition-colors duration-150 hover:text-ink">#{t}</a>)}
+    </div>
+
+    <div class="prose mt-10 max-w-none">
+      <Content />
+    </div>
+
+    <p class="mt-12 text-[13px] text-ink-3">研究笔记，不构成投资建议。</p>
+
+    <nav class="mt-8 grid gap-4 border-t border-line pt-6 sm:grid-cols-2" aria-label="更多笔记">
+      {
+        older ? (
+          <a href={`/research/${older.id}/`} class="group block">
+            <span class="text-[13px] text-ink-3">← 更早</span>
+            <span class="mt-1 block font-bold text-[16px] leading-7 text-ink transition-colors duration-150 group-hover:text-accent">{older.data.title}</span>
+          </a>
+        ) : <span />
+      }
+      {
+        newer && (
+          <a href={`/research/${newer.id}/`} class="group block sm:text-right">
+            <span class="text-[13px] text-ink-3">更新 →</span>
+            <span class="mt-1 block font-bold text-[16px] leading-7 text-ink transition-colors duration-150 group-hover:text-accent">{newer.data.title}</span>
+          </a>
+        )
+      }
+    </nav>
+  </article>
+</BaseLayout>

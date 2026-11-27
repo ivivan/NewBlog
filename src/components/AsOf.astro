@@ -1,0 +1,14 @@
+---
+// Signature detail: every figure on the site carries a mono as-of stamp.
+interface Props {
+  date: string;
+  note?: string;
+  class?: string;
+}
+const { date, note, class: className = "" } = Astro.props;
+---
+
+<span class={`figure inline-flex items-center gap-2 text-[12px] leading-4 text-ink-3 ${className}`}>
+  <span class="h-px w-3 bg-accent" aria-hidden="true"></span>
+  <span>截至 {date}{note && <span> · {note}</span>}</span>
+</span>

@@ -1,47 +1,55 @@
 ---
-import BaseHead from '../components/BaseHead.astro';
-import Footer from '../components/Footer.astro';
-import Header from '../components/Header.astro';
-import { SITE_DESCRIPTION, SITE_TITLE } from '../consts';
+import "../styles/global.css";
+import Navigation from "../components/Navigation.astro";
+import Footer from "../components/Footer.astro";
+import GoogleAnalytics from "../components/GoogleAnalytics.astro";
+import { siteConfig } from "../config/content.ts";
 
 interface Props {
-	title?: string;
-	description?: string;
-	image?: string;
+  title?: string;
+  description?: string;
+  /** Keep this page out of search engines (e.g. the hidden drawer of old posts). */
+  noindex?: boolean;
 }
 
-const { title, description, image } = Astro.props;
+const { title, description = siteConfig.description, noindex = false } = Astro.props;
+const pageTitle = title ? `${title} · ${siteConfig.name}` : siteConfig.title;
+const canonical = new URL(Astro.url.pathname, Astro.site);
 ---
 
 <!doctype html>
-<html lang="en" class="h-full">
-
-	<head>
-		<BaseHead
-			title={title ? `${title} | ${SITE_TITLE}` : SITE_TITLE}
-			description={description || SITE_DESCRIPTION}
-			image={image}
-		/>
-	</head>
-	<body class="flex h-full bg-slate-50 text-slate-900 dark:bg-black dark:text-white">
-		<div class="fixed inset-0 flex justify-center sm:px-8">
-			<div class="flex w-full max-w-7xl lg:px-8">
-				<div class="w-full bg-white ring-1 ring-slate-100 dark:bg-slate-900 dark:ring-slate-300/20">
-				</div>
-			</div>
-		</div>
-		<div class="relative flex w-full flex-col">
-			<Header />
-			<main class="flex-auto">
-				<div class="sm:px-8 mt-32">
-					<div class="mx-auto w-full max-w-7xl lg:px-8">
-						<div class="relative px-4 sm:px-8 lg:px-12">
-							<slot />
-						</div>
-					</div>
-				</div>
-			</main>
-			<Footer />
-		</div>
-	</body>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="canonical" href={canonical} />
+    <link rel="alternate" type="application/rss+xml" title={`${siteConfig.name} · 研究笔记`} href="/rss.xml" />
+    <meta name="generator" content={Astro.generator} />
+    <title>{pageTitle}</title>
+    <meta name="description" content={description} />
+    {noindex && <meta name="robots" content="noindex, nofollow" />}
+    <meta property="og:title" content={pageTitle} />
+    <meta property="og:description" content={description} />
+    <meta property="og:url" content={canonical} />
+    <GoogleAnalytics />
+    <script is:inline>
+      // Theme bootstrap: stored choice, default light. Runs before paint.
+      (function () {
+        const saved = localStorage.getItem("theme") || "light";
+        const dark =
+          saved === "system"
+            ? window.matchMedia("(prefers-color-scheme: dark)").matches
+            : saved === "dark";
+        document.documentElement.classList.toggle("dark", dark);
+      })();
+    </script>
+  </head>
+  <body class="min-h-screen flex flex-col bg-page text-ink">
+    <Navigation />
+    <main class="flex-1">
+      <slot />
+    </main>
+    <Footer />
+  </body>
 </html>

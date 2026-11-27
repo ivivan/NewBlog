@@ -1,0 +1,49 @@
+---
+// Drawdown from running peak, aligned to the index chart's x axis (same width and side padding).
+import { drawdowns, pct, type SeriesPoint } from "../../utils/portfolio";
+
+interface Props {
+  series: SeriesPoint[];
+  width?: number;
+  height?: number;
+}
+
+const { series, width = 960, height = 132 } = Astro.props;
+const pad = { top: 8, right: 56, bottom: 8, left: 36 };
+const iw = width - pad.left - pad.right;
+const ih = height - pad.top - pad.bottom;
+
+const dd = drawdowns(series);
+const worst = Math.min(...dd.map((d) => d.value));
+const floor = Math.min(-0.05, Math.floor(worst * 20) / 20 - 0.0); // round down to a 5% step
+const ticks = [0];
+for (let t = -0.05; t >= floor - 1e-9; t -= 0.05) ticks.push(+t.toFixed(2));
+
+const x = (i: number) => pad.left + (i / (dd.length - 1)) * iw;
+const y = (v: number) => pad.top + (v / floor) * ih;
+const line = dd.map((d, i) => `${i ? "L" : "M"}${x(i).toFixed(1)},${y(d.value).toFixed(1)}`).join("");
+const area = `${line}L${x(dd.length - 1).toFixed(1)},${y(0)}L${x(0)},${y(0)}Z`;
+const worstI = dd.findIndex((d) => d.value === worst);
+---
+
+<svg
+  viewBox={`0 0 ${width} ${height}`}
+  class="block h-auto w-full overflow-visible"
+  role="img"
+  aria-label={`回撤：最深 ${pct(worst)}，出现在 ${dd[worstI].date.slice(0, 7)}`}
+>
+  <g class="figure" font-size="11" fill="var(--ink-3)">
+    {
+      ticks.map((t) => (
+        <g>
+          <line x1={pad.left} x2={pad.left + iw} y1={y(t)} y2={y(t)} stroke={t === 0 ? "var(--line-strong)" : "var(--line)"} stroke-dasharray={t === 0 ? "none" : "2 4"} />
+          <text x={pad.left - 8} y={y(t) + 4} text-anchor="end">{t === 0 ? "0" : `${Math.round(t * 100)}`}</text>
+        </g>
+      ))
+    }
+  </g>
+  <path d={area} fill="color-mix(in oklab, var(--neg) 16%, transparent)" />
+  <path d={line} fill="none" stroke="var(--neg)" stroke-width="1.5" stroke-linejoin="round" />
+  <circle cx={x(worstI)} cy={y(worst)} r="3" fill="var(--neg)" />
+  <text class="figure" x={x(worstI) + 8} y={y(worst) + 4} font-size="12" fill="var(--neg)">{pct(worst)}</text>
+</svg>
